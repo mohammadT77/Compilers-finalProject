@@ -10,8 +10,8 @@ EP = 'epsilon'
 
 class State:
     _childs = {}
-    def __init__(self,name,childs=None):
-        if childs is not None:
+    def __init__(self,name,childs={}):
+        if len(childs)>0:
             if type(childs) != dict : raise (TypeError,"State constructor error1!")
             for c in childs:
                 # if type(childs[c]) not in [State,list]: raise (TypeError,"State constructor error2!")
@@ -30,8 +30,20 @@ class State:
             if c==symbol: return self._childs[c]
         return None
 
+    def get_symbols(self):
+        return [s for s in self._childs]
+
     def get_childs(self):
         return self._childs
 
+    def __str__(self):
+        # return self._name+" => "+str(self._childs)
+        str_res = ""
+        for c in self._childs:
+            str_res+= self._name + " --"+c+"--> " + self._childs[c] +'\n'
+        return str_res
 
+
+    def get_state_name(self):
+        return self._name
 
