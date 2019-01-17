@@ -1,7 +1,7 @@
 from default.state_machines import *
 EP = 'epsilon'
 state_S = State('S',{
-    'a': ['A','E'],
+    'b': ['B','E'],
     EP : ['E','B']
 })
 state_A = State('A',{
@@ -27,8 +27,9 @@ def test_nfa1():
     nfab.add_state(state_B)
     nfab.set_startstate(state_S)
     nfab.add_state(state_E)
+    nfab.add_state(state_C)
     nfa = nfab.build()
-    print(NFA.move([state_S,state_B],'a'))
+    print([s.get_state_name() for s in nfa.ep_closure(nfa.move([state_S,state_B],'b'))])
 
 def test_nfa2():
     nfab = NFA.Builder()
@@ -54,6 +55,6 @@ def test_dfa():
 
 # test_statemachine_builder()
 # test_nfa1()
-# test_nfa2()
-test_dfa()
+test_nfa2()
+# test_dfa()
 

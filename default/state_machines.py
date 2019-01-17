@@ -98,6 +98,17 @@ class StateMachine:
             if state.get_state_name() == name: return state
         return None
 
+    def get_alfabet(self):
+        return self._alfabet
+
+    def find_alfabet(self):
+        alfbt = []
+        for state in self.get_states():
+            for symbols in state.get_symbols():
+                if symbols not in alfbt:
+                    alfbt.append(symbols)
+        return alfbt
+
     def get_states(self):
         return self._states
 
@@ -167,18 +178,26 @@ class NFA(StateMachine):
 
         return res
 
-    def ep_closure(self,states):
+    def ep_closure(self,states,on_explore=[]):
         res = []
         if type(states) == State:
-            print(type(states),states)
+            # print(type(states),states.get_state_name())
             res.clear()
+            if states in on_explore: return [states]
+            on_explore.append(states)
             ep_res = self.move(states, EP)
+            # print("ep res", [x.get_state_name() for x in ep_res])
             if len(ep_res) != 0:
 
                 for s in ep_res:
-                    if not self.is_state_exist(s,res): res.append(s)
-                    for i in self.ep_closure(s):
-                        if not self.is_state_exist(i, res): res.append(i)
+                    if not self.is_state_exist(s,res):
+                        res.append(s)
+                        # print('res',res)
+                        # print('s',s.get_state_name())
+                        for i in self.ep_closure(s,on_explore):
+                            # print('\ti', i)
+                            if not self.is_state_exist(i, res):
+                                res.append(i)
             return res
 
         elif type(states) == list:
