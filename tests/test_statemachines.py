@@ -40,8 +40,20 @@ def test_nfa2():
     nfa = nfab.build()
     print([s.get_state_name() for s in nfa.ep_closure([state_S])])
 
+def test_dfa():
+    state0 =State('s0',{'a':'s1','b':'s0'})
+    state1 = State('s1',{'a':'s1','b':'s2'})
+    state2 = State('s2',{'a':'s1','b':'s2'})
+    dfab = DFA.Builder()
+    dfab.set_alfabet(['a','b'])
+    dfab.set_startstate(state0)
+    dfab.add_state(state1)
+    dfab.add_state(state2,True)
+    dfa = dfab.build()
+    print(dfa)
+
 # test_statemachine_builder()
 # test_nfa1()
-test_nfa2()
-
+# test_nfa2()
+test_dfa()
 

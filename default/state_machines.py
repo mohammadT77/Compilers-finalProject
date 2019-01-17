@@ -24,41 +24,41 @@ class StateMachine:
             return True
 
     class Builder:
-        __startstate = None
-        __alfabet = None
-        __states = None
-        __goalstates = None
+        _startstate = None
+        _alfabet = None
+        _states = None
+        _goalstates = None
 
         def add_state(self,state,is_goal=False):
 
-            if not StateMachine.check_by_alfabet(state,self.__alfabet):
+            if not StateMachine.check_by_alfabet(state, self._alfabet):
                 raise ValueError("Alfabet not allowed")
-            if self.__states is None: self.__states = [state]
-            elif state in self.__states: return ;
+            if self._states is None: self._states = [state]
+            elif state in self._states: return ;
             else:
-                self.__states.append(state)
+                self._states.append(state)
             if is_goal:
-                if self.__goalstates is None:
-                    self.__goalstates = [state]
+                if self._goalstates is None:
+                    self._goalstates = [state]
                 else:
-                    self.__goalstates.append(state)
+                    self._goalstates.append(state)
 
 
         def set_startstate(self,startstate):
-            if not StateMachine.check_by_alfabet(startstate,self.__alfabet):
+            if not StateMachine.check_by_alfabet(startstate, self._alfabet):
                 raise ValueError("Alfabet not allowed")
-            self.__startstate = startstate
+            self._startstate = startstate
             self.add_state(startstate,False)
 
         def set_alfabet(self,alfabet):
-            self.__alfabet = alfabet
+            self._alfabet = alfabet
 
         def check_all(self):
             res = []
-            if self.__startstate is None: res.append('start_state')
-            if self.__goalstates is None: res.append('goal_state')
-            for s in self.__states:
-                if not StateMachine.check_by_alfabet(s,self.__alfabet):
+            if self._startstate is None: res.append('start_state')
+            if self._goalstates is None: res.append('goal_state')
+            for s in self._states:
+                if not StateMachine.check_by_alfabet(s, self._alfabet):
                     res.append('alfabet')
 
             return True if len(res)==0 else res
@@ -67,10 +67,10 @@ class StateMachine:
         def build(self):
             if type(self.check_all()) == list:
                 raise Exception(self.check_all())
-            return StateMachine(self.__startstate.get_state_name(),
-                                self.__states,
-                                [g.get_state_name() for g in self.__goalstates],
-                                self.__alfabet)
+            return StateMachine(self._startstate.get_state_name(),
+                                self._states,
+                                [g.get_state_name() for g in self._goalstates],
+                                self._alfabet)
 
 
 
@@ -132,10 +132,10 @@ class NFA(StateMachine):
         def build(self):
             if type(self.check_all()) == list:
                 raise Exception(self.check_all())
-            return NFA(self.__startstate.get_state_name(),
-                                self.__states,
-                                [g.get_state_name() for g in self.__goalstates],
-                                self.__alfabet)
+            return NFA(self._startstate.get_state_name(),
+                       self._states,
+                       [g.get_state_name() for g in self._goalstates],
+                       self._alfabet)
 
     def __init__(self, start_state_name, states, goal_states_name, alfabet=None):
         super().__init__(start_state_name, states, goal_states_name, alfabet)
@@ -198,30 +198,75 @@ class NFA(StateMachine):
 class DFA(StateMachine):
 
 
+    class Builder(StateMachine.Builder):
+
+        def check_all(self):
+            res =  super().check_all()
+
+            alfabet_ep = False
+            for s in self._states:
+                if EP in s.get_symbols():
+                    alfabet_ep = True
+            if alfabet_ep:
+                if type(res) == list:
+                    res.append('ep-states')
+                else:
+                    res = ['ep-states']
+
+            if self._alfabet not in [None,[]]:
+                if EP in self._alfabet:
+                    if type(res)==list:
+                        res.append('ep-alfabets')
+                    else: res = ['ep-alfabets']
+                alfabet_matched = True
+                for s in self._states:
+                    if s.get_symbols() != self._alfabet:
+                        alfabet_matched = False
+                if not alfabet_matched:
+                    if type(res)==list:
+                        res.append('states-alfabets')
+                    else: res = ['states-alfabets']
+            return res
+
+        def set_alfabet(self, alfabet):
+            if EP in alfabet:
+                raise ValueError("DFA have not EPSILON symbol")
+            super().set_alfabet(alfabet)
+
+        def build(self):
+            if type(self.check_all()) == list:
+                raise Exception(self.check_all())
+            return DFA(self._startstate.get_state_name(),
+                       self._states,
+                       [g.get_state_name() for g in self._goalstates],
+                       self._alfabet)
+
     def __init__(self, start_state_name, states, goal_states_name, alfabet=None):
         super().__init__(start_state_name, states, goal_states_name, alfabet)
 
-
-
-    @staticmethod
-    def move(states, in_symbol):
+    def move(self,states, in_symbol):
         res = []
         if type(states) == State:
             res.clear()
-            for child in states.get_childs:
-                if child == in_symbol:
-                    if type(states.get_child(child)) == list:
-                        res += states.get_child(child)
-                    elif type(states.get_child(child)) == State:
-                        res.append(states.get_child(child))
+            for sym in states.get_symbols():
+                if sym == in_symbol:
+                    if type(states.get_child(sym)) == list:
+                        for s in states.get_child(sym):
+                            if not self.is_state_exist(s, res):
+                                res.append(self.get_state_by_name(s))
                     else:
-                        raise TypeError( "move func error1!")
+                        if not self.is_state_exist(states.get_child(sym),res):
+                            res.append(self.get_state_by_name(states.get_child(sym)))
+
 
         elif type(states) == list:
             res.clear()
             for s in states:
-                res += NFA.move(s, in_symbol)
+                s_res = self.move(s, in_symbol)
+                for sr in s_res:
+                    if not StateMachine.is_state_exist(sr, res):
+                        res.append(sr)
         else:
-            raise TypeError("move func error2!")
+            raise TypeError( "move func error2!")
 
         return res
