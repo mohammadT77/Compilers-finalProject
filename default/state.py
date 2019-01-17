@@ -13,11 +13,11 @@ class State:
     def __init__(self,name,childs={}):
         if len(childs)>0:
             if type(childs) != dict : raise (TypeError,"State constructor error1!")
-            for c in childs:
+            # for c in childs:
                 # if type(childs[c]) not in [State,list]: raise (TypeError,"State constructor error2!")
-                if type(childs[c]) == list:
-                    for s in c:
-                        if type(childs) != State : raise (TypeError,"State constructor error3!");
+                # if type(childs[c]) == list:
+                #     for s in c:
+                #         if type(childs) != State : raise (TypeError,"State constructor error3!");
 
         self._name = name
         self._childs = childs
@@ -40,7 +40,8 @@ class State:
         # return self._name+" => "+str(self._childs)
         str_res = ""
         for c in self._childs:
-            str_res+= self._name + " --"+c+"--> " + self._childs[c] +'\n'
+            str_res+= self._name + " --"+c+"--> " + str(self._childs[c]) +'\n'
+        if str_res == "" : str_res=self._name+"\n"
         return str_res
 
 

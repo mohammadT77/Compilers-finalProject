@@ -7,6 +7,12 @@ class StateMachine:
     _states = None
     _goalstates = None
 
+    @staticmethod
+    def is_state_exist(state,states):
+        for s in states:
+            if state == s:
+                return True
+        return False
 
 
     @staticmethod
@@ -47,7 +53,7 @@ class StateMachine:
         def set_alfabet(self,alfabet):
             self.__alfabet = alfabet
 
-        def __check_all(self):
+        def check_all(self):
             res = []
             if self.__startstate is None: res.append('start_state')
             if self.__goalstates is None: res.append('goal_state')
@@ -59,8 +65,8 @@ class StateMachine:
 
 
         def build(self):
-            if type(self.__check_all()) == list:
-                raise Exception(self.__check_all())
+            if type(self.check_all()) == list:
+                raise Exception(self.check_all())
             return StateMachine(self.__startstate.get_state_name(),
                                 self.__states,
                                 [g.get_state_name() for g in self.__goalstates],
@@ -95,14 +101,14 @@ class StateMachine:
     def get_states(self):
         return self._states
 
-    def get_goalstates(self):
-        return self._goalstates
+    # def get_goalstates(self):
+    #     return self._goalstates
 
     def __str__(self):
         string_res = ""
 
         for s in self._states:
-            string_res += str(s)
+            string_res += ("GOAL "if self.is_goal(s.get_state_name()) else "")+ str(s)
 
         return string_res
 
@@ -117,3 +123,105 @@ class StateMachine:
 
 
 
+
+from default.state import EP
+class NFA(StateMachine):
+
+    class Builder(StateMachine.Builder):
+
+        def build(self):
+            if type(self.check_all()) == list:
+                raise Exception(self.check_all())
+            return NFA(self.__startstate.get_state_name(),
+                                self.__states,
+                                [g.get_state_name() for g in self.__goalstates],
+                                self.__alfabet)
+
+    def __init__(self, start_state_name, states, goal_states_name, alfabet=None):
+        super().__init__(start_state_name, states, goal_states_name, alfabet)
+
+    def move(self,states, in_symbol):
+        res = []
+        if type(states) == State:
+            res.clear()
+            for sym in states.get_symbols():
+                if sym == in_symbol:
+                    if type(states.get_child(sym)) == list:
+                        for s in states.get_child(sym):
+                            if not StateMachine.is_state_exist(s, res):
+                                res.append(self.get_state_by_name(s))
+                    else:
+                        if not StateMachine.is_state_exist(states.get_child(sym),res):
+                            res.append(self.get_state_by_name(states.get_child(sym)))
+
+
+        elif type(states) == list:
+            res.clear()
+            for s in states:
+                s_res = self.move(s, in_symbol)
+                for sr in s_res:
+                    if not StateMachine.is_state_exist(sr, res):
+                        res.append(sr)
+        else:
+            raise TypeError( "move func error2!")
+
+        return res
+
+    def ep_closure(self,states):
+        res = []
+        if type(states) == State:
+            print(type(states),states)
+            res.clear()
+            ep_res = self.move(states, EP)
+            if len(ep_res) != 0:
+
+                for s in ep_res:
+                    if not self.is_state_exist(s,res): res.append(s)
+                    for i in self.ep_closure(s):
+                        if not self.is_state_exist(i, res): res.append(i)
+            return res
+
+        elif type(states) == list:
+            res.clear()
+            for s in states:
+                s_res = self.ep_closure(s)
+                for sr in s_res:
+                    if not self.is_state_exist(sr, res):
+                        res.append(sr)
+        else:
+            raise TypeError( "move func error2!")
+
+        return res
+
+
+
+class DFA(StateMachine):
+
+
+    def __init__(self, start_state_name, states, goal_states_name, alfabet=None):
+        super().__init__(start_state_name, states, goal_states_name, alfabet)
+
+
+
+    @staticmethod
+    def move(states, in_symbol):
+        res = []
+        if type(states) == State:
+            res.clear()
+            for child in states.get_childs:
+                if child == in_symbol:
+                    if type(states.get_child(child)) == list:
+                        res += states.get_child(child)
+                    elif type(states.get_child(child)) == State:
+                        res.append(states.get_child(child))
+                    else:
+                        raise TypeError( "move func error1!")
+
+        elif type(states) == list:
+            res.clear()
+            for s in states:
+                res += NFA.move(s, in_symbol)
+        else:
+            raise TypeError("move func error2!")
+
+        return res
