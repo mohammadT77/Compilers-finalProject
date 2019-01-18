@@ -53,8 +53,54 @@ def test_dfa():
     dfa = dfab.build()
     print(dfa)
 
+def test_figure3_26():
+    # Exercise 3.6.4 of Compiler book
+    state = [
+        State('0',{EP:['1','3']}),
+        State('1',{'a':'2'}),
+        State('2',{'a':'2'}),
+        State('3',{'b':'4'}),
+        State('4',{'b':'4'}),
+    ]
+    nfa_builder = NFA.Builder()
+    nfa_builder.set_startstate(state[0])
+    nfa_builder.add_state(state[1])
+    nfa_builder.add_state(state[2],True)
+    nfa_builder.add_state(state[3])
+    nfa_builder.add_state(state[4],True)
+    nfa = nfa_builder.build()
+
+
+
+def test_exercise3_6_4():
+    # Exercise 3.6.4 of Compiler book
+    state = [
+        State('0',{'a':'1',EP:'3'}),
+        State('1',{'b':'2',EP:'0'}),
+        State('2',{'b':'3',EP:'1'}),
+        State('3',{'a':'0',EP:'2'}),
+    ]
+    nfa_builder = NFA.Builder()
+    nfa_builder.set_startstate(state[0])
+    nfa_builder.add_state(state[1])
+    nfa_builder.add_state(state[2])
+    nfa_builder.add_state(state[3],True)
+    nfa = nfa_builder.build()
+    # print([x.get_state_name() for x in nfa.ep_closure(state[3])])
+    # print(hash_states((nfa.move(state[3],'a'))))
+    # print(hash_states([state[0]]+state[-1:0:-1]))
+    # print("sds",hash_states(nfa.ep_closure(nfa.get_start_state())))
+    # dfa = NFA_to_DFA_convertor(nfa)
+
+
+
+
 # test_statemachine_builder()
 # test_nfa1()
-test_nfa2()
+# test_nfa2()
 # test_dfa()
+# test_figure3_26()
+test_exercise3_6_4()
+
+
 

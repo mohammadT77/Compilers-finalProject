@@ -1,4 +1,6 @@
-from default.state import State
+from default.state import State,hash_state_list
+from copy import copy,deepcopy
+
 
 class StateMachine:
 
@@ -95,11 +97,11 @@ class StateMachine:
 
     def get_state_by_name(self,name):
         for state in self._states:
-            if state.get_state_name() == name: return state
+            if state.get_state_name() == name: return copy(state)
         return None
 
     def get_alfabet(self):
-        return self._alfabet
+        return deepcopy(self._alfabet)
 
     def find_alfabet(self):
         alfbt = []
@@ -110,7 +112,7 @@ class StateMachine:
         return alfbt
 
     def get_states(self):
-        return self._states
+        return deepcopy(self._states)
 
     # def get_goalstates(self):
     #     return self._goalstates
@@ -127,11 +129,15 @@ class StateMachine:
 
 
     def get_start_state(self):
-        return self._startstate
+        return copy(self._startstate)
 
     def is_goal(self,state_name):
+        if type(state_name) == State:
+            return state_name.get_state_name() in [g.get_state_name() for g in self._goalstates]
         return state_name in [g.get_state_name() for g in self._goalstates]
 
+    def get_goal_states(self):
+        return deepcopy(self._goalstates)
 
 
 
@@ -178,13 +184,14 @@ class NFA(StateMachine):
 
         return res
 
-    def ep_closure(self,states,on_explore=[]):
+    def ep_closure1(self,states,on_explore=[]):
         res = []
+        if states in res: return [states]
         if type(states) == State:
-            # print(type(states),states.get_state_name())
             res.clear()
-            if states in on_explore: return [states]
-            on_explore.append(states)
+            print(type(states),states.get_state_name())
+            res.append(states)
+            # on_explore.append(states)
             ep_res = self.move(states, EP)
             # print("ep res", [x.get_state_name() for x in ep_res])
             if len(ep_res) != 0:
@@ -194,7 +201,7 @@ class NFA(StateMachine):
                         res.append(s)
                         # print('res',res)
                         # print('s',s.get_state_name())
-                        for i in self.ep_closure(s,on_explore):
+                        for i in self.ep_closure1(s,on_explore):
                             # print('\ti', i)
                             if not self.is_state_exist(i, res):
                                 res.append(i)
@@ -203,7 +210,7 @@ class NFA(StateMachine):
         elif type(states) == list:
             res.clear()
             for s in states:
-                s_res = self.ep_closure(s)
+                s_res = self.ep_closure1(s)
                 for sr in s_res:
                     if not self.is_state_exist(sr, res):
                         res.append(sr)
@@ -211,6 +218,26 @@ class NFA(StateMachine):
             raise TypeError( "move func error2!")
 
         return res
+
+    def ep_closure(self,states):
+        if type(states) not in [ list,State]:
+            raise TypeError("move func error2!")
+        from default.state import intersection_list,union_list
+        res = states if type(states)==list else [states]
+        ep_move = self.move(states,EP)
+        res = union_list(ep_move, res)
+        # print("initial ep_move",(ep_move))
+        # print("initial res",(res))
+        while True:
+            # print("inters...",hash_state_list(intersection_list(res,ep_move)))
+            ep_move = self.move(ep_move,EP)
+            res = union_list(ep_move,res)
+            # print("res", hash_state_list(res))
+            # print("ep_move", hash_state_list(ep_move))
+            if (union_list(res, ep_move)) == res: return res
+
+
+
 
 
 
