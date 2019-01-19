@@ -58,7 +58,7 @@ class State:
         # return self._name+" => "+str(self._childs)
         str_res = ""
         for c in self._childs:
-            str_res+= self._name + " --"+c+"--> " + str(self._childs[c]) +'\n'
+            str_res+= self._name + "\t -- "+c+" --> \t" + str(self._childs[c]) +'\n'
         if str_res == "" : str_res=self._name+"\n"
         return str_res
 
@@ -73,6 +73,7 @@ def hash_state_list(states):
         raise Exception
     res = ""
     states.sort()
+    if len(states)==0: return "DS"
     for x in states:
         res+=x.get_state_name()+"|"
     return res[0:-1]

@@ -1,5 +1,64 @@
-from default.state import State,hash_state_list
+from default.state import State
+from default.state import hash_state_list as hash_states
 from copy import copy,deepcopy
+
+
+
+def NFA_to_DFA_convertor(nfa,alfbt=None):
+    convert_table = {}
+    newgoal_states = []
+    dfa_builder = DFA.Builder()
+
+    def __set_alfabet():
+        alfabet = nfa.get_alfabet() if alfbt is None else alfbt
+        if alfabet is None: alfabet = nfa.find_alfabet()
+        if alfabet is not None:
+            if EP in alfabet: alfabet.remove(EP)
+
+        return alfabet
+
+
+    alfabet = __set_alfabet()
+    if alfabet is None: raise Exception("alfabet error")
+    dfa_builder.set_alfabet(alfabet)
+
+    def __add_state(states):
+        # print("\n------------\n\tstates",hash_states(states)) #TODO trace
+        if hash_states(states) not in convert_table:
+            convert_table[hash_states(states)] = None
+            for s in states:
+                if nfa.is_goal(s):newgoal_states.append(hash_states(states))
+            # print("\tconvrt_tbl",convert_table) #TODO trace
+            map = {}
+            for sym in alfabet:
+                move_ary = nfa.move(states,sym)
+                temp_ary = nfa.ep_closure(move_ary)
+                # print('\t\tsym',sym,":") #TODO trace
+                # print('\t\t\tmove:',hash_states(move_ary)) #TODO trace
+                # print('\t\t\ttemp:',hash_states(temp_ary)) #TODO trace
+                __add_state(temp_ary)
+                map[sym] = hash_states(temp_ary)
+            convert_table[hash_states(states)] = map
+            # return map
+            # print("\tnew cnvrttbl", convert_table) #TODO trace
+        else: return;
+
+    start_state_ary = nfa.ep_closure(nfa.get_start_state())
+    # print("sss",hash_states(start_state_ary)) #TODO trace
+    __add_state(start_state_ary)
+    # print("\nCONVERT_TABLE:",convert_table)
+    # print("\nNEWGOAL_STATES:",newgoal_states)
+
+    for cs in convert_table:
+        state = State(cs,convert_table[cs])
+        if cs==hash_states(start_state_ary):
+            dfa_builder.set_startstate(state)
+        else:
+            dfa_builder.add_state(state,True if state.get_state_name() in newgoal_states else False)
+
+    return dfa_builder.build()
+
+
 
 
 class StateMachine:
@@ -120,9 +179,10 @@ class StateMachine:
     def __str__(self):
         string_res = ""
 
+        string_res+="START STATE: "+self._startstate.get_state_name()+"\n------\n"
         for s in self._states:
-            string_res += ("GOAL "if self.is_goal(s.get_state_name()) else "")+ str(s)
-
+            string_res += str(s)
+        string_res+="------\nGOAL STATE(s): "+str([g.get_state_name() for g in self._goalstates])
         return string_res
 
 
@@ -248,6 +308,16 @@ class DFA(StateMachine):
 
         def check_all(self):
             res =  super().check_all()
+            multi_child = False
+            for s in self._states:
+                for child in s.get_symbols():
+                    if type(s.get_child(child))==list:
+                        multi_child = True
+            if multi_child:
+                if type(res) == list:
+                    res.append('multi-child')
+                else:
+                    res = ['multi-child']
 
             alfabet_ep = False
             for s in self._states:
@@ -290,24 +360,14 @@ class DFA(StateMachine):
     def __init__(self, start_state_name, states, goal_states_name, alfabet=None):
         super().__init__(start_state_name, states, goal_states_name, alfabet)
 
-    def move(self,states, in_symbol):
+    def move(self,state, in_symbol):
         res = []
-        if type(states) == State:
-            res.clear()
-            for sym in states.get_symbols():
-                if sym == in_symbol:
-                    if type(states.get_child(sym)) == list:
-                        for s in states.get_child(sym):
-                            if not self.is_state_exist(s, res):
-                                res.append(self.get_state_by_name(s))
-                    else:
-                        if not self.is_state_exist(states.get_child(sym),res):
-                            res.append(self.get_state_by_name(states.get_child(sym)))
+        if type(state) == State:
+            return self.get_state_by_name(state.get_child(in_symbol))
 
-
-        elif type(states) == list:
+        elif type(state) == list:
             res.clear()
-            for s in states:
+            for s in state:
                 s_res = self.move(s, in_symbol)
                 for sr in s_res:
                     if not StateMachine.is_state_exist(sr, res):
