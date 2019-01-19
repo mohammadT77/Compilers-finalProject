@@ -25,7 +25,10 @@ py main.py [readfile_path] [save_outputfile_path (default=last_output.txt)]
   ```
   output:
   ```
-  Enter your Text:
+  Enter your Text: ...
+  .
+  .
+  .
   ```
   
   ----------
@@ -37,9 +40,17 @@ py main.py [readfile_path] [save_outputfile_path (default=last_output.txt)]
   File Path: file_input_test.txt
   ------------------------------------------------------
   INPUT TEXT:
-  - 1)123123
-  - 2)2323.2312
-  - 3)123
+  - test file:
+  - 123.23
+  - 22E2
+  - 231E-12
+  - 21.11E-123
+  -
+  - >invalid:
+  - >asdsa
+  - >1sd
+  - >we1
+  - >123-23
   ------------------------------------------------------
   RegExr: (([0 - 9] +)?\.)?[0 - 9] + ([eE][-+]?[0-9]+)?
   ------------------------------------------------------
