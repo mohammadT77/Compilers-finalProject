@@ -4,7 +4,7 @@ Real numbers RegExr Python - Compiler final project
 RegExr: (([0 - 9] +)?\.)?[0 - 9] + ([eE][-+]?[0-9]+)?
 
 NFA:
-![Real Numbers RegExr]https://github.com/mohammadT77/Compilers-finalProject/blob/master/default/real%20num%20regex.png
+![Real Numbers RegExr](https://github.com/mohammadT77/Compilers-finalProject/blob/master/default/real%20num%20regex.png)
 
 
 main.py:
@@ -12,8 +12,8 @@ main.py:
   OUTPUT: substrings that match with RegExpr in text
   
   CONSOLE COMMANDS:
-  -py main.py
-  -py main.py [readfile_path] [save_outputfile_path (default=last_output.txt)]
+  py main.py
+  py main.py [readfile_path] [save_outputfile_path (default=last_output.txt)]
   
   example:
   ```
@@ -43,6 +43,15 @@ main.py:
   .
   .
   .
+  OUTPUT:
+  1)123.23
+  2)22E2
+  3)231E-12
+  4)21.11E-123
+
+  ======================================================
+  Save Path: last_output.txt
+  Saved!
   ```
   Now Check Saved Path
   
